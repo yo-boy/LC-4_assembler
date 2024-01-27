@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+// enough for all possible values that can be expressed
 enum Operand {
     Imm3(u8),
     Imm7(u8),
@@ -6,9 +7,13 @@ enum Operand {
     Addr(u16),
     Reg(u8),
     Trapvect(u8),
+    // possible solution to BR representation
+    BRFlag(u8),
     None(),
 }
 
+// this should be removed and the BR value should be
+// passed around as an operand
 enum BR {
     BR,
     BRn,
@@ -48,6 +53,10 @@ enum Operation {
     RTI,
 }
 
+// this general shape is enough for all instruction
+// though I need to consider when addresses will be computed
+// possibly a struct for every operation instead of this general one
+// maybe add something extra here possibly
 struct Instruction {
     operation: Operation,
     op1: Operand,
@@ -64,7 +73,8 @@ fn encode(inst: Instruction) -> EncodedInstruction {
     EncodedInstruction::Short(0)
 }
 
-fn getOpcode(operation: Operation) -> u16 {
+// output the correct 5 bits (maybe 6 actually) for each operation
+fn get_opcode(operation: Operation) -> u16 {
     match operation {
         Operation::ADD => todo!(),
         Operation::ADDi => todo!(),

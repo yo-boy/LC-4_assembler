@@ -192,11 +192,19 @@ fn remove_comments(input: &str) -> String {
     return result;
 }
 
-fn main() {
-    let myfile = read_file("./examples/hello.asm").unwrap();
+fn read_process_file(file_path: &str) -> Vec<String> {
+    println!("processing file: ");
+    let myfile = read_file(file_path).unwrap();
+    println!("{}", myfile);
     let processed_input = process_input(myfile);
+    println!("comments stripped:");
     for s in &processed_input {
         println!("{}", s);
     }
-    println!("{:?}", &processed_input);
+    processed_input
+}
+
+fn main() {
+    let file_path = "./examples/hello.asm";
+    println!("{:?}", read_process_file(file_path));
 }

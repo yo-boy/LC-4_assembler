@@ -222,20 +222,26 @@ fn convert_hex_to_num(number: &str) -> u16 {
     u16::from_str_radix(number, 16).unwrap()
 }
 
-fn first_pass(inst: Vec<String>) -> Vec<String> {
-    let mut result: Vec<String> = Vec::new();
-    for instruction in inst {
+fn first_pass(instructions_list: Vec<LabelInstruction>) -> Vec<LabelInstruction> {
+    let mut result: Vec<LabelInstruction> = Vec::new();
+    for LabelInstruction { label, instruction } in instructions_list {
         // here two things should be done, first applying assembler directives
         // second split long intructions into two lines
         if instruction.starts_with(".") {
             let instruction: Vec<&str> = instruction.split_whitespace().collect();
             match instruction[0] {
-                ".ORIG" => result.push(convert_hex_to_num(instruction[1]).to_string()),
-                ".FILL" => result.push(convert_hex_to_num(instruction[1]).to_string()),
+                ".ORIG" => result.push(LabelInstruction {
+                    label,
+                    instruction: convert_hex_to_num(instruction[1]).to_string(),
+                }),
+                ".FILL" => result.push(LabelInstruction {
+                    label,
+                    instruction: convert_hex_to_num(instruction[1]).to_string(),
+                }),
                 ".BLKW" => todo!(),
                 ".STRINGZ" => todo!(),
                 ".END" => return result,
-                _ => println!("error"),
+                _ => panic!("bad instruction"),
             }
         }
     }
@@ -278,15 +284,6 @@ fn main() {
     let _path = Path::new(file_path).parent().unwrap();
 
     println!("{:?}", read_process_file(&file_path));
-
-    let binary_string = "0000100010010011";
-    let _binary_number = match u16::from_str_radix(binary_string, 2) {
-        Ok(num) => num,
-        Err(_) => {
-            println!("Invalid binary string");
-            return;
-        }
-    };
 
     let binary_number = 0b0000100010010011u16;
 

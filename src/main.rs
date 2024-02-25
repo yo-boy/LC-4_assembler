@@ -3,7 +3,8 @@ use phf;
 use regex::Regex;
 use std::{
     fs::File,
-    io::{self, Read},
+    io::{self, Read, Write},
+    path::Path,
 };
 
 // enough for all possible values that can be expressed
@@ -86,13 +87,18 @@ struct AssemblyFile {
     parsed_lines: Vec<String>,
 }
 
+struct LabelInstruction {
+    label: Option<String>,
+    instruction: String,
+}
+
 // output the correct 5 bits (maybe 6 actually) for each operation
 fn get_opcode(operation: Operation) -> u16 {
     match operation {
-        Operation::ADD => todo!(),
-        Operation::ADDi => todo!(),
-        Operation::ADDi16 => todo!(),
-        Operation::ADDa => todo!(),
+        Operation::ADD => 0b000010u16,
+        Operation::ADDi => 0b000010u16,
+        Operation::ADDi16 => 0b000011u16,
+        Operation::ADDa => 0b000011u16,
         Operation::AND => todo!(),
         Operation::ANDi => todo!(),
         Operation::ANDi16 => todo!(),
@@ -204,7 +210,89 @@ fn read_process_file(file_path: &str) -> Vec<String> {
     processed_input
 }
 
+fn write_instructions_to_file(path: &str, instruction_buffer: Vec<u16>) {
+    let mut file = File::create(path).unwrap();
+    for instruction in instruction_buffer {
+        file.write_all(&instruction.to_be_bytes()).unwrap();
+    }
+}
+
+fn convert_hex_to_num(number: &str) -> u16 {
+    let number = &number[1..];
+    u16::from_str_radix(number, 16).unwrap()
+}
+
+fn first_pass(inst: Vec<String>) -> Vec<String> {
+    let mut result: Vec<String> = Vec::new();
+    for instruction in inst {
+        // here two things should be done, first applying assembler directives
+        // second split long intructions into two lines
+        if instruction.starts_with(".") {
+            let instruction: Vec<&str> = instruction.split_whitespace().collect();
+            match instruction[0] {
+                ".ORIG" => result.push(convert_hex_to_num(instruction[1]).to_string()),
+                ".FILL" => result.push(convert_hex_to_num(instruction[1]).to_string()),
+                ".BLKW" => todo!(),
+                ".STRINGZ" => todo!(),
+                ".END" => return result,
+                _ => println!("error"),
+            }
+        }
+    }
+    result
+}
+
+fn seperate_label_instruction(instructions: Vec<String>) -> Vec<LabelInstruction> {
+    let mut result: Vec<LabelInstruction> = Vec::new();
+    let possible_instruction = vec![
+        ".ORIG", ".FILL", ".BLKW", ".STRINGZ", ".END", "ADD", "ADDa", "ADDe", "AND", "ANDa",
+        "ANDe", "XOR", "XORa", "XORe", "BRn", "BRz", "BRp", "BRzp", "BRnp", "BRnz", "BRnzp", "BR",
+        "JUMP", "RET", "JSR", "JSRR", "NOT", "ST", "STR", "STRe", "TRAP", "RTI", "LD", "LDa",
+    ];
+    // split the instruction and check if the first word is a valid instruction, if not it is a label
+    for instruction in instructions {
+        let split_instruction: Vec<&str> = instruction.split_whitespace().collect();
+        if possible_instruction.contains(&split_instruction[0]) {
+            result.push(LabelInstruction {
+                label: None,
+                instruction,
+            })
+        } else {
+            // if we find a label, store it in the struct and store the rest of the instruction without it
+            result.push(LabelInstruction {
+                label: Some(split_instruction[0].to_string()),
+                instruction: split_instruction
+                    .into_iter()
+                    .skip(1)
+                    .collect::<Vec<&str>>()
+                    .join(" "),
+            })
+        }
+    }
+
+    result
+}
+
 fn main() {
     let file_path = "./examples/hello.asm";
-    println!("{:?}", read_process_file(file_path));
+    let _path = Path::new(file_path).parent().unwrap();
+
+    println!("{:?}", read_process_file(&file_path));
+
+    let binary_string = "0000100010010011";
+    let _binary_number = match u16::from_str_radix(binary_string, 2) {
+        Ok(num) => num,
+        Err(_) => {
+            println!("Invalid binary string");
+            return;
+        }
+    };
+
+    let binary_number = 0b0000100010010011u16;
+
+    let mut write_buffer: Vec<u16> = Vec::new();
+    write_buffer.push(0x3000);
+    write_buffer.push(binary_number);
+    write_buffer.push(0b0000100000000000u16);
+    write_instructions_to_file("./examples/out.bin", write_buffer);
 }

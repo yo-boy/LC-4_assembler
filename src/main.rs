@@ -2,13 +2,16 @@
 mod reader;
 mod writer;
 
+use std::fmt;
+
 use crate::reader::read_input_file;
 use crate::writer::write_instructions_to_file;
 
 static POSSIBLE_INSTRUCTIONS: &'static [&'static str] = &[
-    ".ORIG", ".FILL", ".BLKW", ".STRINGZ", ".END", "ADD", "ADDa", "ADDe", "AND", "ANDa", "ANDe",
-    "XOR", "XORa", "XORe", "BRn", "BRz", "BRp", "BRzp", "BRnp", "BRnz", "BRnzp", "BR", "JUMP",
-    "RET", "JSR", "JSRR", "NOT", "ST", "STR", "STRe", "TRAP", "RTI", "LD", "LDa",
+    "LSD", "LPN", "CLRP", "HALT", "PUTS", "GETC", "OUT", "IN", "PUTSP", ".ORIG", ".FILL", ".BLKW",
+    ".STRINGZ", ".END", "ADD", "ADDa", "ADDe", "AND", "ANDa", "ANDe", "XOR", "XORa", "XORe", "BRn",
+    "BRz", "BRp", "BRzp", "BRnp", "BRnz", "BRnzp", "BR", "JUMP", "RET", "JSR", "JSRR", "NOT", "ST",
+    "STR", "STRe", "TRAP", "RTI", "LD", "LDa",
 ];
 
 // enough for all possible values that can be expressed
@@ -94,6 +97,20 @@ struct AssemblyFile {
 struct LabelInstruction {
     label: Option<String>,
     instruction: String,
+}
+
+impl fmt::Debug for LabelInstruction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            " [{}, {}] ",
+            match &self.label {
+                Some(label) => label,
+                None => "",
+            },
+            self.instruction
+        )
+    }
 }
 
 // output the correct 5 bits (maybe 6 actually) for each operation
@@ -183,17 +200,58 @@ fn first_pass(instructions_list: Vec<LabelInstruction>) -> Vec<LabelInstruction>
                 ".ORIG" => result.push(LabelInstruction {
                     label,
                     instruction: convert_hex_to_num(instruction[1]).to_string(),
-                }),
+                }), // TODO make "convert hex to num" into a function that can handle all formats
                 ".FILL" => result.push(LabelInstruction {
                     label,
                     instruction: convert_hex_to_num(instruction[1]).to_string(),
                 }),
-                ".BLKW" => todo!(),
-                ".STRINGZ" => todo!(),
+                ".BLKW" => result.extend(generate_blkw(label, instruction)),
+                ".STRINGZ" => result.extend(generate_stringz(label, instruction)),
                 ".END" => return result,
                 _ => panic!("bad instruction"),
             }
         }
+    }
+    result
+}
+
+fn generate_stringz(label: Option<String>, instruction: Vec<&str>) -> Vec<LabelInstruction> {
+    let mut result: Vec<LabelInstruction> = Vec::new();
+    let ascii_bytes: &[u8];
+    if instruction[1].is_ascii() {
+        ascii_bytes = instruction[1][1..instruction[1].len() - 1].as_bytes();
+    } else {
+        panic!("STRINGZ non ascii input")
+    };
+    result.push(LabelInstruction {
+        label,
+        instruction: ascii_bytes[0].to_string(),
+    });
+    for &byte in ascii_bytes.into_iter().skip(1) {
+        result.push(LabelInstruction {
+            label: None,
+            instruction: byte.to_string(),
+        });
+    }
+    result.push(LabelInstruction {
+        label: None,
+        instruction: "0".to_string(),
+    });
+    result
+}
+
+fn generate_blkw(label: Option<String>, instruction: Vec<&str>) -> Vec<LabelInstruction> {
+    let mut result: Vec<LabelInstruction> = Vec::new();
+    let number = instruction[1].parse().expect("BLKW invalid argument");
+    result.push(LabelInstruction {
+        label,
+        instruction: "0".to_string(),
+    });
+    for _ in 0..number {
+        result.push(LabelInstruction {
+            label: None,
+            instruction: "0".to_string(),
+        })
     }
     result
 }

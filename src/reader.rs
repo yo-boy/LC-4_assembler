@@ -5,6 +5,8 @@ use std::{
 
 use regex::Regex;
 
+use crate::{LabelInstruction, POSSIBLE_INSTRUCTIONS};
+
 fn remove_comments(input: &str) -> String {
     // match from any ; character to the end of the line and any empty lines
     let re = Regex::new(r";.*|(?m)^\s*").unwrap();
@@ -39,7 +41,31 @@ fn process_input(input: String) -> Vec<String> {
     result_vector
 }
 
-pub fn read_input_file(file_path: &str) -> Vec<String> {
+fn seperate_label_instruction(instructions: Vec<String>) -> Vec<LabelInstruction> {
+    let mut result: Vec<LabelInstruction> = Vec::new();
+    // split the instruction and check if the first word is a valid instruction, if not it is a label
+    for instruction in instructions {
+        let split_instruction: Vec<&str> = instruction.split_whitespace().collect();
+        if POSSIBLE_INSTRUCTIONS.contains(&split_instruction[0]) {
+            result.push(LabelInstruction {
+                label: None,
+                instruction,
+            })
+        } else {
+            // if we find a label, store it in the struct and store the rest of the instruction without it
+            result.push(LabelInstruction {
+                label: Some(split_instruction[0].to_string()),
+                instruction: split_instruction
+                    .into_iter()
+                    .skip(1)
+                    .collect::<Vec<&str>>()
+                    .join(" "),
+            })
+        }
+    }
+    result
+}
+pub fn read_input_file(file_path: &str) -> Vec<LabelInstruction> {
     println!("processing file: ");
     let myfile = read_file(file_path).unwrap();
     println!("{}", myfile);
@@ -48,5 +74,5 @@ pub fn read_input_file(file_path: &str) -> Vec<String> {
     for s in &processed_input {
         println!("{}", s);
     }
-    processed_input
+    seperate_label_instruction(processed_input)
 }

@@ -1,9 +1,9 @@
 #![allow(dead_code)]
 mod reader;
 mod writer;
+
 use crate::reader::read_input_file;
 use crate::writer::write_instructions_to_file;
-use phf;
 
 // enough for all possible values that can be expressed
 enum Operand {
@@ -137,30 +137,27 @@ enum Opcode {
     RTI,
 }
 
-static ENCODINGS: phf::Map<u8, Opcode> = phf::phf_map! {
-    0b1u8 => Opcode::ADD,
-    0b10u8 => Opcode::AND,
-    0b11u8 => Opcode::XOR,
-    0b100u8 => Opcode::BR,
-    0b101u8 => Opcode::JUMP,
-    0b110u8 => Opcode::JSR,
-    0b1000u8 => Opcode::LD,
-    0b1001u8 => Opcode::ST,
-    0b111u8 => Opcode::STR,
-    0b1010u8 => Opcode::NOT,
-    0b1100u8 => Opcode::TRAP,
-    0b1101u8 => Opcode::RTI,
-};
+// static ENCODINGS: phf::Map<u8, Opcode> = phf::phf_map! {
+//     0b1u8 => Opcode::ADD,
+//     0b10u8 => Opcode::AND,
+//     0b11u8 => Opcode::XOR,
+//     0b100u8 => Opcode::BR,
+//     0b101u8 => Opcode::JUMP,
+//     0b110u8 => Opcode::JSR,
+//     0b1000u8 => Opcode::LD,
+//     0b1001u8 => Opcode::ST,
+//     0b111u8 => Opcode::STR,
+//     0b1010u8 => Opcode::NOT,
+//     0b1100u8 => Opcode::TRAP,
+//     0b1101u8 => Opcode::RTI,
+// };
 
-fn resolve_opcode(encoded: u16) -> Option<Opcode> {
-    let shifted: u16 = encoded >> 11;
-    let key = shifted.to_be_bytes().to_owned();
-    let res = ENCODINGS.get(&key[1]).to_owned();
-    match res {
-        None => None,
-        Some(opcode) => Some(opcode.to_owned()),
-    }
-}
+// fn resolve_opcode(encoded: u16) -> Option<Opcode> {
+//     let shifted: u16 = encoded >> 11;
+//     let key = shifted.to_be_bytes().to_owned();
+//     let res = ENCODINGS.get(&key[1]).to_owned();
+//     res.map(|opcode| opcode.to_owned())
+// }
 
 fn convert_hex_to_num(number: &str) -> u16 {
     let number = &number[1..];
@@ -172,7 +169,7 @@ fn first_pass(instructions_list: Vec<LabelInstruction>) -> Vec<LabelInstruction>
     for LabelInstruction { label, instruction } in instructions_list {
         // here two things should be done, first applying assembler directives
         // second split long intructions into two lines
-        if instruction.starts_with(".") {
+        if instruction.starts_with('.') {
             let instruction: Vec<&str> = instruction.split_whitespace().collect();
             match instruction[0] {
                 ".ORIG" => result.push(LabelInstruction {
@@ -227,7 +224,7 @@ fn seperate_label_instruction(instructions: Vec<String>) -> Vec<LabelInstruction
 fn main() {
     let file_path = "./examples/hello.asm";
 
-    println!("{:?}", read_input_file(&file_path));
+    println!("{:?}", read_input_file(file_path));
 
     let binary_number = 0b0000100010010011u16;
 
@@ -236,4 +233,7 @@ fn main() {
     write_buffer.push(binary_number);
     write_buffer.push(0b0000100000000000u16);
     write_instructions_to_file("./examples/out.bin", write_buffer);
+
+    let _test: Vec<(Option<String>, String)> = Vec::new();
+    let _test: Vec<LabelInstruction> = Vec::new();
 }

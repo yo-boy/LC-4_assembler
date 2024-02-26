@@ -15,7 +15,7 @@ fn remove_comments(input: &str) -> String {
     // remove spaces at the end of all lines
     let re = Regex::new(r"(?m)\s$").unwrap();
     let result = re.replace_all(&result, "").to_string();
-    return result;
+    result
 }
 
 fn read_file(file_path: &str) -> io::Result<String> {
@@ -36,7 +36,7 @@ fn process_input(input: String) -> Vec<String> {
             result_vector.push(my_line);
         }
     }
-    return result_vector;
+    result_vector
 }
 
 pub fn read_input_file(file_path: &str) -> Vec<String> {

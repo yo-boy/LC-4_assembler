@@ -39,7 +39,7 @@ fn process_input(input: String) -> Vec<String> {
     return result_vector;
 }
 
-pub fn read_process_file(file_path: &str) -> Vec<String> {
+pub fn read_input_file(file_path: &str) -> Vec<String> {
     println!("processing file: ");
     let myfile = read_file(file_path).unwrap();
     println!("{}", myfile);

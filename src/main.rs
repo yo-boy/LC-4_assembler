@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 mod reader;
 mod writer;
-use crate::reader::read_process_file;
+use crate::reader::read_input_file;
 use crate::writer::write_instructions_to_file;
 use phf;
 
@@ -227,7 +227,7 @@ fn seperate_label_instruction(instructions: Vec<String>) -> Vec<LabelInstruction
 fn main() {
     let file_path = "./examples/hello.asm";
 
-    println!("{:?}", read_process_file(&file_path));
+    println!("{:?}", read_input_file(&file_path));
 
     let binary_number = 0b0000100010010011u16;
 

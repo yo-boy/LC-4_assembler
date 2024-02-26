@@ -5,6 +5,12 @@ mod writer;
 use crate::reader::read_input_file;
 use crate::writer::write_instructions_to_file;
 
+static POSSIBLE_INSTRUCTIONS: &'static [&'static str] = &[
+    ".ORIG", ".FILL", ".BLKW", ".STRINGZ", ".END", "ADD", "ADDa", "ADDe", "AND", "ANDa", "ANDe",
+    "XOR", "XORa", "XORe", "BRn", "BRz", "BRp", "BRzp", "BRnp", "BRnz", "BRnzp", "BR", "JUMP",
+    "RET", "JSR", "JSRR", "NOT", "ST", "STR", "STRe", "TRAP", "RTI", "LD", "LDa",
+];
+
 // enough for all possible values that can be expressed
 enum Operand {
     Imm3(u8),
@@ -194,15 +200,10 @@ fn first_pass(instructions_list: Vec<LabelInstruction>) -> Vec<LabelInstruction>
 
 fn seperate_label_instruction(instructions: Vec<String>) -> Vec<LabelInstruction> {
     let mut result: Vec<LabelInstruction> = Vec::new();
-    let possible_instruction = vec![
-        ".ORIG", ".FILL", ".BLKW", ".STRINGZ", ".END", "ADD", "ADDa", "ADDe", "AND", "ANDa",
-        "ANDe", "XOR", "XORa", "XORe", "BRn", "BRz", "BRp", "BRzp", "BRnp", "BRnz", "BRnzp", "BR",
-        "JUMP", "RET", "JSR", "JSRR", "NOT", "ST", "STR", "STRe", "TRAP", "RTI", "LD", "LDa",
-    ];
     // split the instruction and check if the first word is a valid instruction, if not it is a label
     for instruction in instructions {
         let split_instruction: Vec<&str> = instruction.split_whitespace().collect();
-        if possible_instruction.contains(&split_instruction[0]) {
+        if POSSIBLE_INSTRUCTIONS.contains(&split_instruction[0]) {
             result.push(LabelInstruction {
                 label: None,
                 instruction,

@@ -1,3 +1,4 @@
+use std::fmt;
 use std::{
     fs::File,
     io::{self, Read},
@@ -5,7 +6,26 @@ use std::{
 
 use regex::Regex;
 
-use crate::{LabelInstruction, POSSIBLE_INSTRUCTIONS};
+use crate::POSSIBLE_INSTRUCTIONS;
+
+pub struct LabelInstruction {
+    pub label: Option<String>,
+    pub instruction: String,
+}
+
+impl fmt::Debug for LabelInstruction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{{\"{}\" . \"{}\"}}",
+            match &self.label {
+                Some(label) => label,
+                None => "",
+            },
+            self.instruction
+        )
+    }
+}
 
 fn remove_comments(input: &str) -> String {
     // match from any ; character to the end of the line and any empty lines

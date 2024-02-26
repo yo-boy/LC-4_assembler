@@ -1,10 +1,10 @@
 #![allow(dead_code)]
+mod first_pass;
 mod reader;
 mod writer;
 
-use std::fmt;
-
-use crate::reader::read_input_file;
+use crate::first_pass::first_pass;
+use crate::reader::{read_input_file, LabelInstruction};
 use crate::writer::write_instructions_to_file;
 
 static POSSIBLE_INSTRUCTIONS: &'static [&'static str] = &[
@@ -12,6 +12,11 @@ static POSSIBLE_INSTRUCTIONS: &'static [&'static str] = &[
     ".STRINGZ", ".END", "ADD", "ADDa", "ADDe", "AND", "ANDa", "ANDe", "XOR", "XORa", "XORe", "BRn",
     "BRz", "BRp", "BRzp", "BRnp", "BRnz", "BRnzp", "BR", "JUMP", "RET", "JSR", "JSRR", "NOT", "ST",
     "STR", "STRe", "TRAP", "RTI", "LD", "LDa",
+];
+
+static DOUBLE_INSTRUCTION: &'static [&'static str] = &[
+    "ADDa", "ADDe", "ANDa", "ANDe", "XORa", "XORe", "BRn", "BRz", "BRp", "BRzp", "BRnp", "BRnz",
+    "BRnzp", "BR", "JSR", "LDa", "ST", "STRe",
 ];
 
 // enough for all possible values that can be expressed
@@ -94,25 +99,6 @@ struct AssemblyFile {
     parsed_lines: Vec<String>,
 }
 
-struct LabelInstruction {
-    label: Option<String>,
-    instruction: String,
-}
-
-impl fmt::Debug for LabelInstruction {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            " [{}, {}] ",
-            match &self.label {
-                Some(label) => label,
-                None => "",
-            },
-            self.instruction
-        )
-    }
-}
-
 // output the correct 5 bits (maybe 6 actually) for each operation
 fn get_opcode(operation: Operation) -> u16 {
     match operation {
@@ -184,108 +170,10 @@ fn resolve_opcode(encoded: u16) -> Option<Opcode> {
 }
 */
 
-fn convert_hex_to_num(number: &str) -> u16 {
-    let number = &number[1..];
-    u16::from_str_radix(number, 16).unwrap()
-}
-
-fn first_pass(instructions_list: Vec<LabelInstruction>) -> Vec<LabelInstruction> {
-    let mut result: Vec<LabelInstruction> = Vec::new();
-    for LabelInstruction { label, instruction } in instructions_list {
-        // here two things should be done, first applying assembler directives
-        // second split long intructions into two lines
-        if instruction.starts_with('.') {
-            let instruction: Vec<&str> = instruction.split_whitespace().collect();
-            match instruction[0] {
-                ".ORIG" => result.push(LabelInstruction {
-                    label,
-                    instruction: convert_hex_to_num(instruction[1]).to_string(),
-                }), // TODO make "convert hex to num" into a function that can handle all formats
-                ".FILL" => result.push(LabelInstruction {
-                    label,
-                    instruction: convert_hex_to_num(instruction[1]).to_string(),
-                }),
-                ".BLKW" => result.extend(generate_blkw(label, instruction)),
-                ".STRINGZ" => result.extend(generate_stringz(label, instruction)),
-                ".END" => return result,
-                _ => panic!("bad instruction"),
-            }
-        }
-    }
-    result
-}
-
-fn generate_stringz(label: Option<String>, instruction: Vec<&str>) -> Vec<LabelInstruction> {
-    let mut result: Vec<LabelInstruction> = Vec::new();
-    let ascii_bytes: &[u8];
-    if instruction[1].is_ascii() {
-        ascii_bytes = instruction[1][1..instruction[1].len() - 1].as_bytes();
-    } else {
-        panic!("STRINGZ non ascii input")
-    };
-    result.push(LabelInstruction {
-        label,
-        instruction: ascii_bytes[0].to_string(),
-    });
-    for &byte in ascii_bytes.into_iter().skip(1) {
-        result.push(LabelInstruction {
-            label: None,
-            instruction: byte.to_string(),
-        });
-    }
-    result.push(LabelInstruction {
-        label: None,
-        instruction: "0".to_string(),
-    });
-    result
-}
-
-fn generate_blkw(label: Option<String>, instruction: Vec<&str>) -> Vec<LabelInstruction> {
-    let mut result: Vec<LabelInstruction> = Vec::new();
-    let number = instruction[1].parse().expect("BLKW invalid argument");
-    result.push(LabelInstruction {
-        label,
-        instruction: "0".to_string(),
-    });
-    for _ in 0..number {
-        result.push(LabelInstruction {
-            label: None,
-            instruction: "0".to_string(),
-        })
-    }
-    result
-}
-
-fn seperate_label_instruction(instructions: Vec<String>) -> Vec<LabelInstruction> {
-    let mut result: Vec<LabelInstruction> = Vec::new();
-    // split the instruction and check if the first word is a valid instruction, if not it is a label
-    for instruction in instructions {
-        let split_instruction: Vec<&str> = instruction.split_whitespace().collect();
-        if POSSIBLE_INSTRUCTIONS.contains(&split_instruction[0]) {
-            result.push(LabelInstruction {
-                label: None,
-                instruction,
-            })
-        } else {
-            // if we find a label, store it in the struct and store the rest of the instruction without it
-            result.push(LabelInstruction {
-                label: Some(split_instruction[0].to_string()),
-                instruction: split_instruction
-                    .into_iter()
-                    .skip(1)
-                    .collect::<Vec<&str>>()
-                    .join(" "),
-            })
-        }
-    }
-
-    result
-}
-
 fn main() {
     let file_path = "./examples/hello.asm";
-
-    println!("{:?}", read_input_file(file_path));
+    let instructions = read_input_file(file_path);
+    println!("{:?}", &instructions);
 
     let binary_number = 0b0000100010010011u16;
 
@@ -297,4 +185,8 @@ fn main() {
 
     let _test: Vec<(Option<String>, String)> = Vec::new();
     let _test: Vec<LabelInstruction> = Vec::new();
+
+    let proccessed_instructions = first_pass(instructions);
+
+    println!("{:?}", proccessed_instructions);
 }

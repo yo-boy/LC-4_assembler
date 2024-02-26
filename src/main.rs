@@ -137,27 +137,29 @@ enum Opcode {
     RTI,
 }
 
-// static ENCODINGS: phf::Map<u8, Opcode> = phf::phf_map! {
-//     0b1u8 => Opcode::ADD,
-//     0b10u8 => Opcode::AND,
-//     0b11u8 => Opcode::XOR,
-//     0b100u8 => Opcode::BR,
-//     0b101u8 => Opcode::JUMP,
-//     0b110u8 => Opcode::JSR,
-//     0b1000u8 => Opcode::LD,
-//     0b1001u8 => Opcode::ST,
-//     0b111u8 => Opcode::STR,
-//     0b1010u8 => Opcode::NOT,
-//     0b1100u8 => Opcode::TRAP,
-//     0b1101u8 => Opcode::RTI,
-// };
+/*
+static ENCODINGS: phf::Map<u8, Opcode> = phf::phf_map! {
+    0b1u8 => Opcode::ADD,
+    0b10u8 => Opcode::AND,
+    0b11u8 => Opcode::XOR,
+    0b100u8 => Opcode::BR,
+    0b101u8 => Opcode::JUMP,
+    0b110u8 => Opcode::JSR,
+    0b1000u8 => Opcode::LD,
+    0b1001u8 => Opcode::ST,
+    0b111u8 => Opcode::STR,
+    0b1010u8 => Opcode::NOT,
+    0b1100u8 => Opcode::TRAP,
+    0b1101u8 => Opcode::RTI,
+};
 
-// fn resolve_opcode(encoded: u16) -> Option<Opcode> {
-//     let shifted: u16 = encoded >> 11;
-//     let key = shifted.to_be_bytes().to_owned();
-//     let res = ENCODINGS.get(&key[1]).to_owned();
-//     res.map(|opcode| opcode.to_owned())
-// }
+fn resolve_opcode(encoded: u16) -> Option<Opcode> {
+    let shifted: u16 = encoded >> 11;
+    let key = shifted.to_be_bytes().to_owned();
+    let res = ENCODINGS.get(&key[1]).to_owned();
+    res.map(|opcode| opcode.to_owned())
+}
+*/
 
 fn convert_hex_to_num(number: &str) -> u16 {
     let number = &number[1..];

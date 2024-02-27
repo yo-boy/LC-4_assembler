@@ -9,4 +9,11 @@ LOOP	ADD R0, R0, #1		; ADD one to the output variable
 	BRp LOOP		; loop until R1 becomes zero or negative
 
 	HALT
+
+NUMBER	.FILL x12
+
+MESSAGE	.STRINGZ "hello"
+	
 	.END
+
+	

@@ -1,10 +1,12 @@
 #![allow(dead_code)]
 mod first_pass;
 mod reader;
+mod tokenizer;
 mod writer;
 
 use crate::first_pass::first_pass;
 use crate::reader::{read_input_file, LabelInstruction};
+use crate::tokenizer::Operation;
 use crate::writer::write_instructions_to_file;
 
 static POSSIBLE_INSTRUCTIONS: &'static [&'static str] = &[
@@ -18,19 +20,6 @@ static DOUBLE_INSTRUCTION: &'static [&'static str] = &[
     "ADDa", "ADDe", "ANDa", "ANDe", "XORa", "XORe", "BRn", "BRz", "BRp", "BRzp", "BRnp", "BRnz",
     "BRnzp", "BR", "JSR", "LDa", "ST", "STRe",
 ];
-
-// enough for all possible values that can be expressed
-enum Operand {
-    Imm3(u8),
-    Imm7(u8),
-    Imm16(u16),
-    Addr(u16),
-    Reg(u8),
-    Trapvect(u8),
-    // possible solution to BR representation
-    BRFlag(u8),
-    None(),
-}
 
 // this should be removed and the BR value should be
 // passed around as an operand
@@ -46,52 +35,14 @@ enum BR {
     BRnzp,
 }
 
-enum Operation {
-    ADD,
-    ADDi,
-    ADDi16,
-    ADDa,
-    AND,
-    ANDi,
-    ANDi16,
-    ANDa,
-    XOR,
-    XORi,
-    XORi16,
-    XORa,
-    BR(crate::BR),
-    JUMP,
-    RET,
-    JSR,
-    JSRR,
-    LD,
-    LDa,
-    ST,
-    STR,
-    STR16,
-    NOT,
-    TRAP,
-    RTI,
-}
-
 // this general shape is enough for all instruction
 // though I need to consider when addresses will be computed
 // possibly a struct for every operation instead of this general one
 // maybe add something extra here possibly
-struct Instruction {
-    operation: Operation,
-    op1: Operand,
-    op2: Operand,
-    op3: Operand,
-}
 
 enum EncodedInstruction {
     Short(u16),
     Long { inst: u16, data: u16 },
-}
-
-fn encode(_inst: Instruction) -> EncodedInstruction {
-    EncodedInstruction::Short(0)
 }
 
 struct AssemblyFile {
@@ -114,7 +65,7 @@ fn get_opcode(operation: Operation) -> u16 {
         Operation::XORi => todo!(),
         Operation::XORi16 => todo!(),
         Operation::XORa => todo!(),
-        Operation::BR(_) => todo!(),
+        Operation::BR => todo!(),
         Operation::JUMP => todo!(),
         Operation::RET => todo!(),
         Operation::JSR => todo!(),
@@ -127,6 +78,15 @@ fn get_opcode(operation: Operation) -> u16 {
         Operation::NOT => todo!(),
         Operation::TRAP => todo!(),
         Operation::RTI => todo!(),
+        Operation::LSD => todo!(),
+        Operation::LPN => todo!(),
+        Operation::CLRP => todo!(),
+        Operation::HALT => todo!(),
+        Operation::PUTS => todo!(),
+        Operation::GETC => todo!(),
+        Operation::OUT => todo!(),
+        Operation::IN => todo!(),
+        Operation::PUTSP => todo!(),
     }
 }
 

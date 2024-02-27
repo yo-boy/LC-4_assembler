@@ -7,7 +7,7 @@ fn convert_hex_to_num(number: &str) -> u16 {
     let number = &number[1..];
     u16::from_str_radix(number, 16).unwrap()
 }
-
+//TODO check for off-by-1 error in the calculated label address
 pub fn first_pass(instructions: Vec<LabelInstruction>) -> Vec<String> {
     let instructions = first(instructions);
     let mut symbol_table: HashMap<String, u32> = HashMap::new();

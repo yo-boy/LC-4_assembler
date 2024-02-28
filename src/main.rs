@@ -1,12 +1,13 @@
 #![allow(dead_code)]
 mod first_pass;
+mod second_pass;
 mod reader;
 mod tokenizer;
 mod writer;
 
 use crate::first_pass::first_pass;
 use crate::reader::{read_input_file, LabelInstruction};
-use crate::tokenizer::Operation;
+use crate::tokenizer::{match_token, Operation};
 use crate::writer::write_instructions_to_file;
 
 static POSSIBLE_INSTRUCTIONS: &'static [&'static str] = &[
@@ -149,4 +150,8 @@ fn main() {
     let proccessed_instructions = first_pass(instructions);
 
     println!("{:?}", proccessed_instructions);
+
+    for instruction in proccessed_instructions {
+        println! {"{:?}", match_token(instruction)}
+    }
 }

@@ -1,8 +1,23 @@
 use crate::POSSIBLE_INSTRUCTIONS;
 
-enum Instruction {
+pub enum Instruction {
     InstructionWithOperands(InstructionWithOperands),
     U16(u16),
+}
+
+impl std::fmt::Debug for Instruction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Instruction::InstructionWithOperands(inst) => {
+                write!(
+                    f,
+                    "Instruction: {:?} op1: {:?} op2: {:?} op3: {:?}",
+                    inst.operation, inst.op1, inst.op2, inst.op3
+                )
+            }
+            Instruction::U16(num) => write!(f, "{}", num),
+        }
+    }
 }
 
 impl From<InstructionWithOperands> for Instruction {
@@ -14,15 +29,17 @@ impl From<InstructionWithOperands> for Instruction {
 // this general shape is enough for all instruction
 // though I need to consider when addresses will be computed
 // possibly a struct for every operation instead of this general one
-struct InstructionWithOperands {
-    operation: Operation,
-    op1: Option<Operand>,
-    op2: Option<Operand>,
-    op3: Option<Operand>,
+#[derive(Debug)]
+pub struct InstructionWithOperands {
+    pub operation: Operation,
+    pub op1: Option<Operand>,
+    pub op2: Option<Operand>,
+    pub op3: Option<Operand>,
 }
 
 // enough for all possible values that can be expressed
-enum Operand {
+#[derive(Debug)]
+pub enum Operand {
     Imm3(u8),
     Imm7(u8),
     Imm16(u16),
@@ -33,8 +50,9 @@ enum Operand {
     ParseResult(ParseResult),
 }
 
-struct RegData {
-    reg: u8,
+#[derive(Debug)]
+pub struct RegData {
+    pub reg: u8,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -82,7 +100,7 @@ pub enum Operation {
 //     result
 // }
 
-fn match_token(instruction: String) -> Option<Instruction> {
+pub fn match_token(instruction: String) -> Option<Instruction> {
     let result: Option<Instruction>;
     let split = instruction.split_whitespace().collect::<Vec<&str>>();
     if POSSIBLE_INSTRUCTIONS.contains(&split[0]) {
@@ -114,7 +132,8 @@ fn parse_imm_operand(operand: &str) -> Option<i32> {
     }
 }
 
-enum ParseResult {
+#[derive(Debug)]
+pub enum ParseResult {
     Imm(i32),
     Reg(RegData),
 }
@@ -151,6 +170,18 @@ fn parse_num_to_imm16(number: i32) -> Operand {
     })
 }
 
+fn parse_num_to_imm7(number: i32) -> Operand {
+    Operand::Imm7(match number {
+        -64..=-1 => (number + 128) as u8,
+        0 => 0b0000000,
+        1..=63 => number as u8,
+        _ => panic!(
+            "Value {} is outside the representable range of a 7-bit 2's complement number.",
+            number
+        ),
+    })
+}
+
 fn parse_address_or_label(operand: &str) -> Operand {
     match operand.chars().next() {
         Some('x') => Operand::Addr(u16::from_str_radix(&operand[1..], 16).unwrap()),
@@ -160,47 +191,168 @@ fn parse_address_or_label(operand: &str) -> Operand {
 
 fn construct_instruction(instruction: Vec<&str>, op: Operation) -> Option<Instruction> {
     match op {
-        Operation::ADD => tokenize_generic(instruction, op),
+        Operation::ADD => tokenize_generic(op, instruction),
         Operation::ADDi => panic!("parse error: {:?} in tokenizer", op),
-        Operation::ADDi16 => tokenize_16_bit(&op, &instruction),
-        Operation::ADDa => tokenize_16_bit(&op, &instruction),
-        Operation::AND => tokenize_generic(instruction, op),
+        Operation::ADDi16 => tokenize_16_bit(op, instruction),
+        Operation::ADDa => tokenize_16_bit(op, instruction),
+        Operation::AND => tokenize_generic(op, instruction),
         Operation::ANDi => panic!("parse error: {:?} in tokenizer", op),
-        Operation::ANDi16 => tokenize_16_bit(&op, &instruction),
-        Operation::ANDa => tokenize_16_bit(&op, &instruction),
-        Operation::XOR => tokenize_generic(instruction, op),
+        Operation::ANDi16 => tokenize_16_bit(op, instruction),
+        Operation::ANDa => tokenize_16_bit(op, instruction),
+        Operation::XOR => tokenize_generic(op, instruction),
         Operation::XORi => panic!("parse error: {:?} in tokenizer", op),
-        Operation::XORi16 => tokenize_16_bit(&op, &instruction),
-        Operation::XORa => tokenize_16_bit(&op, &instruction),
-        Operation::BR => todo!(),
-        Operation::JUMP => todo!(),
-        Operation::RET => todo!(),
-        Operation::JSR => todo!(),
-        Operation::JSRR => todo!(),
-        Operation::LD => todo!(),
-        Operation::LDa => todo!(),
-        Operation::ST => todo!(),
-        Operation::STR => todo!(),
-        Operation::STR16 => todo!(),
-        Operation::NOT => todo!(),
-        Operation::TRAP => todo!(),
-        Operation::RTI => todo!(),
-        Operation::LSD => todo!(),
-        Operation::LPN => todo!(),
-        Operation::CLRP => todo!(),
-        Operation::HALT => todo!(),
-        Operation::PUTS => todo!(),
-        Operation::GETC => todo!(),
-        Operation::OUT => todo!(),
-        Operation::IN => todo!(),
-        Operation::PUTSP => todo!(),
+        Operation::XORi16 => tokenize_16_bit(op, instruction),
+        Operation::XORa => tokenize_16_bit(op, instruction),
+        Operation::BR => Some(Instruction::InstructionWithOperands(
+            InstructionWithOperands {
+                operation: op,
+                op1: Some(Operand::BRFlag(match instruction[0] {
+                    "BRn" => 0b00000100u8,
+                    "BRz" => 0b00000010u8,
+                    "BRp" => 0b00000001u8,
+                    "BRzp" => 0b00000011u8,
+                    "BRnp" => 0b00000101u8,
+                    "BRnz" => 0b00000110u8,
+                    "BRnzp" => 0b00000111u8,
+                    "BR" => 0b00000111u8,
+                    _ => panic!("parse error: malformed BR"),
+                })),
+                op2: Some(parse_address_or_label(instruction[1])),
+                op3: None,
+            },
+        )),
+        Operation::JUMP => Some(Instruction::InstructionWithOperands(
+            InstructionWithOperands {
+                operation: op,
+                op1: Some(Operand::Reg(token_reg(instruction[1]))),
+                op2: None,
+                op3: None,
+            },
+        )),
+        Operation::RET => Some(Instruction::InstructionWithOperands(
+            InstructionWithOperands {
+                operation: op,
+                op1: None,
+                op2: None,
+                op3: None,
+            },
+        )),
+        Operation::JSR => Some(Instruction::InstructionWithOperands(
+            InstructionWithOperands {
+                operation: op,
+                op1: Some(parse_address_or_label(instruction[1])),
+                op2: None,
+                op3: None,
+            },
+        )),
+        Operation::JSRR => Some(Instruction::InstructionWithOperands(
+            InstructionWithOperands {
+                operation: op,
+                op1: Some(Operand::Reg(token_reg(instruction[1]))),
+                op2: None,
+                op3: None,
+            },
+        )),
+        Operation::LD => tokenize_reg_imm7(op, instruction),
+        Operation::LDa => Some(Instruction::InstructionWithOperands(
+            InstructionWithOperands {
+                operation: op,
+                op1: Some(Operand::Reg(token_reg(instruction[1]))),
+                op2: Some(parse_address_or_label(instruction[2])),
+                op3: None,
+            },
+        )),
+        Operation::ST => tokenize_reg_addr(op, instruction),
+        Operation::STR => tokenize_reg_imm7(op, instruction),
+        Operation::STR16 => Some(Instruction::InstructionWithOperands(
+            InstructionWithOperands {
+                operation: op,
+                op1: Some(Operand::Reg(token_reg(instruction[1]))),
+                op2: Some(parse_address_or_label(instruction[2])),
+                op3: None,
+            },
+        )),
+        Operation::NOT => Some(Instruction::InstructionWithOperands(
+            InstructionWithOperands {
+                operation: op,
+                op1: Some(Operand::Reg(token_reg(instruction[1]))),
+                op2: Some(Operand::Reg(token_reg(instruction[2]))),
+                op3: None,
+            },
+        )),
+        Operation::TRAP => Some(Instruction::InstructionWithOperands(
+            InstructionWithOperands {
+                operation: op,
+                op1: Some(parse_trap_vect(instruction[1])),
+                op2: None,
+                op3: None,
+            },
+        )),
+        Operation::RTI => Some(Instruction::InstructionWithOperands(
+            InstructionWithOperands {
+                operation: op,
+                op1: None,
+                op2: None,
+                op3: None,
+            },
+        )),
+        Operation::LSD => Some(tokenize_trapcall(0x26u8)),
+        Operation::LPN => Some(tokenize_trapcall(0x27u8)),
+        Operation::CLRP => Some(tokenize_trapcall(0x28u8)),
+        Operation::HALT => Some(tokenize_trapcall(0x25u8)),
+        Operation::PUTS => Some(tokenize_trapcall(0x22u8)),
+        Operation::GETC => Some(tokenize_trapcall(0x20u8)),
+        Operation::OUT => Some(tokenize_trapcall(0x21u8)),
+        Operation::IN => Some(tokenize_trapcall(0x23u8)),
+        Operation::PUTSP => Some(tokenize_trapcall(0x24u8)),
     }
 }
 
-fn tokenize_16_bit(op: &Operation, instruction: &Vec<&str>) -> Option<Instruction> {
+fn tokenize_trapcall(vector: u8) -> Instruction {
+    Instruction::InstructionWithOperands(InstructionWithOperands {
+        operation: Operation::TRAP,
+        op1: Some(Operand::Trapvect(vector)),
+        op2: None,
+        op3: None,
+    })
+}
+
+fn parse_trap_vect(vector: &str) -> Operand {
+    Operand::Trapvect(
+        u8::from_str_radix(&vector[1..], 16).expect("parse error: could not parse Trapvector"),
+    )
+}
+
+fn tokenize_reg_addr(op: Operation, instruction: Vec<&str>) -> Option<Instruction> {
     Some(Instruction::InstructionWithOperands(
         InstructionWithOperands {
-            operation: *op,
+            operation: op,
+            op1: Some(Operand::Reg(token_reg(instruction[1]))),
+            op2: Some(parse_address_or_label(instruction[2])),
+            op3: None,
+        },
+    ))
+}
+
+fn tokenize_reg_imm7(op: Operation, instruction: Vec<&str>) -> Option<Instruction> {
+    Some(Instruction::InstructionWithOperands(
+        InstructionWithOperands {
+            operation: op,
+            op1: Some(Operand::Reg(token_reg(instruction[1]))),
+            op2: Some(parse_num_to_imm7(
+                instruction[2][1..]
+                    .parse::<i32>()
+                    .expect("failed to parse number to i32"),
+            )),
+            op3: None,
+        },
+    ))
+}
+
+fn tokenize_16_bit(op: Operation, instruction: Vec<&str>) -> Option<Instruction> {
+    Some(Instruction::InstructionWithOperands(
+        InstructionWithOperands {
+            operation: op,
             op1: Some(Operand::Reg(token_reg(instruction[1]))),
             op2: Some(Operand::Reg(token_reg(instruction[2]))),
             op3: Some(match op {
@@ -216,7 +368,7 @@ fn tokenize_16_bit(op: &Operation, instruction: &Vec<&str>) -> Option<Instructio
     ))
 }
 
-fn tokenize_generic(instruction: Vec<&str>, op: Operation) -> Option<Instruction> {
+fn tokenize_generic(op: Operation, instruction: Vec<&str>) -> Option<Instruction> {
     match instruction[3].chars().next() {
         Some('R') => Some(Instruction::InstructionWithOperands(
             InstructionWithOperands {

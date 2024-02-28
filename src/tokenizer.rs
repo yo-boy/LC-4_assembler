@@ -1,8 +1,14 @@
 use crate::POSSIBLE_INSTRUCTIONS;
 
 enum Instruction {
-    Instruction,
+    InstructionWithOperands(InstructionWithOperands),
     U16(u16),
+}
+
+impl From<InstructionWithOperands> for Instruction {
+    fn from(v: InstructionWithOperands) -> Self {
+        Self::InstructionWithOperands(v)
+    }
 }
 
 // this general shape is enough for all instruction
@@ -23,8 +29,8 @@ enum Operand {
     Addr(u16),
     Reg(RegData),
     Trapvect(u8),
-    // possible solution to BR representation
     BRFlag(u8),
+    ParseResult(ParseResult),
 }
 
 struct RegData {
@@ -98,17 +104,86 @@ fn token_reg(reg: &str) -> RegData {
     RegData { reg: num }
 }
 
+fn parse_imm_operand(operand: &str) -> Option<i32> {
+    match operand.chars().next() {
+        Some('x') => i32::from_str_radix(&operand[1..], 16).ok(), // Hexadecimal
+        Some('#') => i32::from_str_radix(&operand[1..], 10).ok(), // Decimal
+        Some('b') => i32::from_str_radix(&operand[1..], 2).ok(),  // Binary
+        _ => None,                                                // Not a recognized format
+    }
+}
+
+enum ParseResult {
+    Imm(i32),
+    Reg(RegData),
+}
+
+fn parse_imm_or_reg(operand: &str) -> ParseResult {
+    match operand.chars().next() {
+        Some('R') => ParseResult::Reg(token_reg(operand)),
+        Some('x' | '#' | 'b') => ParseResult::Imm(parse_imm_operand(operand).unwrap()),
+        _ => panic!("Error: operand parse error"),
+    }
+}
+
+fn parse_num_to_imm3(number: i32) -> Operand {
+    Operand::Imm3(match number {
+        0..=3 => number as u8,           // Positive values
+        -4..=-1 => (256 + number) as u8, // Negative values
+        _ => panic!(
+            "Value {} is outside the representable range of a 3-bit 2's complement number.",
+            number
+        ),
+    })
+}
+
+fn parse_num_to_imm16(number: i32) -> Operand {
+    Operand::Imm16(match number {
+        -32768 => 0b1000000000000000,
+        -32767..=-1 => (number + 65536) as u16,
+        0 => 0b0000000000000000,
+        1..=32767 => number as u16,
+        _ => panic!(
+            "Value {} is outside the representable range of a 16-bit 2's complement number.",
+            number
+        ),
+    })
+}
+
+fn parse_address_or_label(operand: &str) -> Operand {
+    match operand.chars().next() {
+        Some('x') => Operand::Addr(u16::from_str_radix(&operand[1..], 16).unwrap()),
+        _ => Operand::Addr(operand.parse::<u16>().unwrap()),
+    }
+}
+
 fn construct_instruction(instruction: Vec<&str>, op: Operation) -> Option<Instruction> {
     match op {
-        Operation::ADD => todo!(),
-        Operation::ADDi => todo!(),
-        Operation::ADDi16 => todo!(),
-        Operation::ADDa => todo!(),
-        Operation::AND => todo!(),
-        Operation::ANDi => todo!(),
+        Operation::ADD => tokenize_generic(instruction, op),
+        Operation::ADDi => panic!("parse error: ADDi in tokenizer"),
+        Operation::ADDi16 => Some(Instruction::InstructionWithOperands(
+            InstructionWithOperands {
+                operation: Operation::ADDi16,
+                op1: Some(Operand::Reg(token_reg(instruction[1]))),
+                op2: Some(Operand::Reg(token_reg(instruction[2]))),
+                op3: Some(parse_num_to_imm16(
+                    parse_imm_operand(instruction[3]).unwrap(),
+                )),
+            },
+        )),
+        Operation::ADDa => Some(Instruction::InstructionWithOperands(
+            InstructionWithOperands {
+                operation: Operation::ADDa,
+                op1: Some(Operand::Reg(token_reg(instruction[1]))),
+                op2: Some(Operand::Reg(token_reg(instruction[2]))),
+                op3: Some(parse_address_or_label(instruction[3])),
+            },
+        )),
+        Operation::AND => tokenize_generic(instruction, op),
+        Operation::ANDi => panic!("parse error: ANDi in tokenizer"),
         Operation::ANDi16 => todo!(),
         Operation::ANDa => todo!(),
-        Operation::XOR => todo!(),
+        Operation::XOR => tokenize_generic(instruction, op),
         Operation::XORi => todo!(),
         Operation::XORi16 => todo!(),
         Operation::XORa => todo!(),
@@ -137,6 +212,35 @@ fn construct_instruction(instruction: Vec<&str>, op: Operation) -> Option<Instru
     }
 }
 
+fn tokenize_generic(instruction: Vec<&str>, op: Operation) -> Option<Instruction> {
+    match instruction[3].chars().next() {
+        Some('R') => Some(Instruction::InstructionWithOperands(
+            InstructionWithOperands {
+                operation: op,
+                op1: Some(Operand::Reg(token_reg(instruction[1]))),
+                op2: Some(Operand::Reg(token_reg(instruction[2]))),
+                op3: Some(Operand::Reg(token_reg(instruction[3]))),
+            },
+        )),
+        Some('x' | '#' | 'b') => Some(Instruction::InstructionWithOperands(
+            InstructionWithOperands {
+                operation: match op {
+                    Operation::ADD => Operation::ADDi,
+                    Operation::AND => Operation::ANDi,
+                    Operation::XOR => Operation::XORi,
+                    _ => todo!(),
+                },
+                op1: Some(Operand::Reg(token_reg(instruction[1]))),
+                op2: Some(Operand::Reg(token_reg(instruction[2]))),
+                op3: Some(parse_num_to_imm3(
+                    parse_imm_operand(instruction[3]).unwrap(),
+                )),
+            },
+        )),
+        _ => panic!("parse error: malformed add operand"),
+    }
+}
+
 fn match_op(op: &str) -> Operation {
     let result: Operation = match op {
         "LSD" => Operation::LSD,
@@ -162,4 +266,48 @@ fn match_op(op: &str) -> Operation {
         _ => panic!("invalid instruction"),
     };
     result
+}
+
+fn match_the_op(op: &str) -> Operation {
+    match op {
+        "LSD" => Operation::LSD,
+        "LPN" => Operation::LPN,
+        "CLRP" => Operation::CLRP,
+        "HALT" => Operation::HALT,
+        "PUTS" => Operation::PUTS,
+        "GETC" => Operation::GETC,
+        "OUT" => Operation::OUT,
+        "IN" => Operation::IN,
+        "PUTSP" => Operation::PUTSP,
+        "ADD" => Operation::ADD,
+        "ADDa" => Operation::ADDa,
+        "ADDe" => Operation::ADDi16,
+        "AND" => Operation::AND,
+        "ANDa" => Operation::ANDa,
+        "ANDe" => Operation::ANDi16,
+        "XOR" => Operation::XOR,
+        "XORa" => Operation::XORa,
+        "XORe" => Operation::XORi16,
+        "BRn" => Operation::BR,
+        "BRz" => Operation::BR,
+        "BRp" => Operation::BR,
+        "BRzp" => Operation::BR,
+        "BRnp" => Operation::BR,
+        "BRnz" => Operation::BR,
+        "BRnzp" => Operation::BR,
+        "BR" => Operation::BR,
+        "JUMP" => Operation::JUMP,
+        "RET" => Operation::RET,
+        "JSR" => Operation::JSR,
+        "JSRR" => Operation::JSRR,
+        "NOT" => Operation::NOT,
+        "ST" => Operation::ST,
+        "STR" => Operation::STR,
+        "STRe" => Operation::STR16,
+        "TRAP" => Operation::TRAP,
+        "RTI" => Operation::RTI,
+        "LD" => Operation::LD,
+        "LDa" => Operation::LDa,
+        _ => panic!("invalid instruction"),
+    }
 }

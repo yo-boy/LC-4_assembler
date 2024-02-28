@@ -1,24 +1,14 @@
 use crate::POSSIBLE_INSTRUCTIONS;
 
-enum Inst {
-    DoubleLength(RealInstruction, u16),
-    Single(RealInstruction),
-}
-
-enum RealInstruction {
+enum Instruction {
     Instruction,
     U16(u16),
-}
-
-struct Instruction {
-    instruction: CompleteInstruction,
-    argument: Option<u16>,
 }
 
 // this general shape is enough for all instruction
 // though I need to consider when addresses will be computed
 // possibly a struct for every operation instead of this general one
-struct CompleteInstruction {
+struct InstructionWithOperands {
     operation: Operation,
     op1: Option<Operand>,
     op2: Option<Operand>,
@@ -31,11 +21,14 @@ enum Operand {
     Imm7(u8),
     Imm16(u16),
     Addr(u16),
-    Reg(u8),
+    Reg(RegData),
     Trapvect(u8),
     // possible solution to BR representation
     BRFlag(u8),
-    None(),
+}
+
+struct RegData {
+    reg: u8,
 }
 
 pub enum Operation {
@@ -75,24 +68,77 @@ pub enum Operation {
     PUTSP,
 }
 
-pub fn second_pass(instructions: Vec<String>) -> Vec<u16> {
-    let mut result: Vec<u16> = Vec::new();
+// this should be moved to a seperate file
+// pub fn second_pass(instructions: Vec<String>) -> Vec<u16> {
+//     let mut result: Vec<u16> = Vec::new();
 
+//     result
+// }
+
+fn match_token(instruction: String) -> Option<Instruction> {
+    let result: Option<Instruction>;
+    let split = instruction.split_whitespace().collect::<Vec<&str>>();
+    if POSSIBLE_INSTRUCTIONS.contains(&split[0]) {
+        let op = match_op(split[0]);
+        result = construct_instruction(split, op);
+    } else {
+        result = Some(Instruction::U16(instruction.parse::<u16>().unwrap()));
+    }
     result
 }
 
-// fn match_token(instruction: String) -> Option<Instruction> {
-//     let result: Instruction;
-//     let split = instruction.split_whitespace().collect::<Vec<&str>>();
-//     if POSSIBLE_INSTRUCTIONS.contains(&split[0]) {
-//         match_op(split)
-//     } else {
+fn token_reg(reg: &str) -> RegData {
+    let register_number = match (reg.starts_with('R'), reg.ends_with(',')) {
+        (true, true) => &reg[1..reg.len() - 1], // Strip 'R' at start and ',' at end
+        (true, false) => &reg[1..],             // Strip 'R' at start
+        _ => panic!("Error: malformed register identifier"), //no R at the start
+    };
+    let num = register_number.parse::<u8>().unwrap();
+    assert!(num < 8);
+    RegData { reg: num }
+}
 
-//     }
-// }
+fn construct_instruction(instruction: Vec<&str>, op: Operation) -> Option<Instruction> {
+    match op {
+        Operation::ADD => todo!(),
+        Operation::ADDi => todo!(),
+        Operation::ADDi16 => todo!(),
+        Operation::ADDa => todo!(),
+        Operation::AND => todo!(),
+        Operation::ANDi => todo!(),
+        Operation::ANDi16 => todo!(),
+        Operation::ANDa => todo!(),
+        Operation::XOR => todo!(),
+        Operation::XORi => todo!(),
+        Operation::XORi16 => todo!(),
+        Operation::XORa => todo!(),
+        Operation::BR => todo!(),
+        Operation::JUMP => todo!(),
+        Operation::RET => todo!(),
+        Operation::JSR => todo!(),
+        Operation::JSRR => todo!(),
+        Operation::LD => todo!(),
+        Operation::LDa => todo!(),
+        Operation::ST => todo!(),
+        Operation::STR => todo!(),
+        Operation::STR16 => todo!(),
+        Operation::NOT => todo!(),
+        Operation::TRAP => todo!(),
+        Operation::RTI => todo!(),
+        Operation::LSD => todo!(),
+        Operation::LPN => todo!(),
+        Operation::CLRP => todo!(),
+        Operation::HALT => todo!(),
+        Operation::PUTS => todo!(),
+        Operation::GETC => todo!(),
+        Operation::OUT => todo!(),
+        Operation::IN => todo!(),
+        Operation::PUTSP => todo!(),
+    }
+}
 
-fn match_op(op: Vec<&str>) -> Operation {
-    let result: Operation = match op[0] {
+fn match_op(op: &str) -> Operation {
+    let result: Operation = match op {
         "LSD" => Operation::LSD,
         "LPN" => Operation::LPN,
         "CLRP" => Operation::CLRP,

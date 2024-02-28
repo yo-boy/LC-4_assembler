@@ -37,6 +37,7 @@ struct RegData {
     reg: u8,
 }
 
+#[derive(Copy, Clone, Debug)]
 pub enum Operation {
     ADD,
     ADDi,
@@ -160,33 +161,17 @@ fn parse_address_or_label(operand: &str) -> Operand {
 fn construct_instruction(instruction: Vec<&str>, op: Operation) -> Option<Instruction> {
     match op {
         Operation::ADD => tokenize_generic(instruction, op),
-        Operation::ADDi => panic!("parse error: ADDi in tokenizer"),
-        Operation::ADDi16 => Some(Instruction::InstructionWithOperands(
-            InstructionWithOperands {
-                operation: Operation::ADDi16,
-                op1: Some(Operand::Reg(token_reg(instruction[1]))),
-                op2: Some(Operand::Reg(token_reg(instruction[2]))),
-                op3: Some(parse_num_to_imm16(
-                    parse_imm_operand(instruction[3]).unwrap(),
-                )),
-            },
-        )),
-        Operation::ADDa => Some(Instruction::InstructionWithOperands(
-            InstructionWithOperands {
-                operation: Operation::ADDa,
-                op1: Some(Operand::Reg(token_reg(instruction[1]))),
-                op2: Some(Operand::Reg(token_reg(instruction[2]))),
-                op3: Some(parse_address_or_label(instruction[3])),
-            },
-        )),
+        Operation::ADDi => panic!("parse error: {:?} in tokenizer", op),
+        Operation::ADDi16 => tokenize_16_bit(&op, &instruction),
+        Operation::ADDa => tokenize_16_bit(&op, &instruction),
         Operation::AND => tokenize_generic(instruction, op),
-        Operation::ANDi => panic!("parse error: ANDi in tokenizer"),
-        Operation::ANDi16 => todo!(),
-        Operation::ANDa => todo!(),
+        Operation::ANDi => panic!("parse error: {:?} in tokenizer", op),
+        Operation::ANDi16 => tokenize_16_bit(&op, &instruction),
+        Operation::ANDa => tokenize_16_bit(&op, &instruction),
         Operation::XOR => tokenize_generic(instruction, op),
-        Operation::XORi => todo!(),
-        Operation::XORi16 => todo!(),
-        Operation::XORa => todo!(),
+        Operation::XORi => panic!("parse error: {:?} in tokenizer", op),
+        Operation::XORi16 => tokenize_16_bit(&op, &instruction),
+        Operation::XORa => tokenize_16_bit(&op, &instruction),
         Operation::BR => todo!(),
         Operation::JUMP => todo!(),
         Operation::RET => todo!(),
@@ -210,6 +195,25 @@ fn construct_instruction(instruction: Vec<&str>, op: Operation) -> Option<Instru
         Operation::IN => todo!(),
         Operation::PUTSP => todo!(),
     }
+}
+
+fn tokenize_16_bit(op: &Operation, instruction: &Vec<&str>) -> Option<Instruction> {
+    Some(Instruction::InstructionWithOperands(
+        InstructionWithOperands {
+            operation: *op,
+            op1: Some(Operand::Reg(token_reg(instruction[1]))),
+            op2: Some(Operand::Reg(token_reg(instruction[2]))),
+            op3: Some(match op {
+                Operation::ADDi16 => parse_num_to_imm16(parse_imm_operand(instruction[3]).unwrap()),
+                Operation::ADDa => parse_address_or_label(instruction[3]),
+                Operation::ANDi16 => parse_num_to_imm16(parse_imm_operand(instruction[3]).unwrap()),
+                Operation::ANDa => parse_address_or_label(instruction[3]),
+                Operation::XORi16 => parse_num_to_imm16(parse_imm_operand(instruction[3]).unwrap()),
+                Operation::XORa => parse_address_or_label(instruction[3]),
+                _ => todo!(),
+            }),
+        },
+    ))
 }
 
 fn tokenize_generic(instruction: Vec<&str>, op: Operation) -> Option<Instruction> {
@@ -242,33 +246,6 @@ fn tokenize_generic(instruction: Vec<&str>, op: Operation) -> Option<Instruction
 }
 
 fn match_op(op: &str) -> Operation {
-    let result: Operation = match op {
-        "LSD" => Operation::LSD,
-        "LPN" => Operation::LPN,
-        "CLRP" => Operation::CLRP,
-        "HALT" => Operation::HALT,
-        "PUTS" => Operation::PUTS,
-        "GETC" => Operation::GETC,
-        "OUT" => Operation::OUT,
-        "IN" => Operation::IN,
-        "PUTSP" => Operation::PUTSP,
-        "ADD" => Operation::ADD,
-        "AND" => Operation::AND,
-        "XOR" => Operation::XOR,
-        "JUMP" => Operation::JUMP,
-        "RET" => Operation::RET,
-        "JSRR" => Operation::JSRR,
-        "NOT" => Operation::NOT,
-        "STR" => Operation::STR,
-        "TRAP" => Operation::TRAP,
-        "RTI" => Operation::RTI,
-        "LD" => Operation::LD,
-        _ => panic!("invalid instruction"),
-    };
-    result
-}
-
-fn match_the_op(op: &str) -> Operation {
     match op {
         "LSD" => Operation::LSD,
         "LPN" => Operation::LPN,

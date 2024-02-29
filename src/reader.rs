@@ -42,7 +42,7 @@ fn remove_comments(input: &str) -> String {
     result
 }
 
-fn read_file(file_path: PathBuf) -> io::Result<String> {
+fn read_file(file_path: &PathBuf) -> io::Result<String> {
     let mut file = File::open(file_path)?; // ? will return early if there's an error
 
     let mut contents = String::new();
@@ -87,7 +87,7 @@ fn seperate_label_instruction(instructions: Vec<String>) -> Vec<LabelInstruction
     }
     result
 }
-pub fn read_input_file(file_path: PathBuf) -> Result<Vec<LabelInstruction>, Error> {
+pub fn read_input_file(file_path: &PathBuf) -> Result<Vec<LabelInstruction>, Error> {
     println!("processing file: ");
     let myfile = read_file(file_path)?;
     println!("{}", myfile);

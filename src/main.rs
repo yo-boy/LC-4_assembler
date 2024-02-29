@@ -4,11 +4,9 @@ mod second_pass;
 mod tokenizer;
 mod writer;
 
+use clap::command;
 use std::io::Error;
 use std::path::PathBuf;
-
-use clap::arg;
-use clap::command;
 
 use crate::first_pass::first_pass;
 use crate::reader::read_input_file;
@@ -29,14 +27,35 @@ static DOUBLE_INSTRUCTION: &'static [&'static str] = &[
 ];
 
 fn main() -> Result<(), Error> {
+    let matches = command!()
+        .about("Assembler for the LC-4 architecture.")
+        .arg(
+            clap::Arg::new("input")
+                .default_value("./examples/hello.asm")
+                .value_parser(clap::value_parser!(PathBuf))
+                .help("assembly input file")
+                .requires("output"),
+        )
+        .arg(
+            clap::Arg::new("output")
+                .default_value("./examples/out.bin")
+                .value_parser(clap::value_parser!(PathBuf))
+                .help("binary output file"),
+        )
+        .get_matches();
 
-    
-    
-    compile_file("./examples/hello.asm".into(), "./examples/out.bin".into())?;
+    compile_file(
+        matches
+            .get_one::<PathBuf>("input")
+            .expect("could not parse input file path"),
+        matches
+            .get_one::<PathBuf>("output")
+            .expect("could not parse output file path"),
+    )?;
     Ok(())
 }
 
-fn compile_file(input: PathBuf, output: PathBuf) -> Result<(), Error> {
+fn compile_file(input: &PathBuf, output: &PathBuf) -> Result<(), Error> {
     let instructions = read_input_file(input);
     println!("{:?}", instructions);
     let instructions = first_pass(instructions?);

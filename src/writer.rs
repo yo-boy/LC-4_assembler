@@ -5,7 +5,7 @@ use std::{
 };
 
 pub fn write_instructions_to_file(
-    path: PathBuf,
+    path: &PathBuf,
     instruction_buffer: Vec<u16>,
 ) -> Result<(), Error> {
     let mut file = File::create(path)?;

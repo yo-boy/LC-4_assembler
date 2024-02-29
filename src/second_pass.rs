@@ -1,5 +1,3 @@
-// this should be moved to a seperate file
-
 use crate::tokenizer::{match_token, Instruction, Operand, Operation};
 
 pub fn second_pass(instructions: Vec<String>) -> Vec<u16> {

@@ -47,7 +47,6 @@ pub enum Operand {
     Reg(RegData),
     Trapvect(u8),
     BRFlag(u8),
-    ParseResult(ParseResult),
 }
 
 #[derive(Debug)]
@@ -129,20 +128,6 @@ fn parse_imm_operand(operand: &str) -> Option<i32> {
         Some('#') => i32::from_str_radix(&operand[1..], 10).ok(), // Decimal
         Some('b') => i32::from_str_radix(&operand[1..], 2).ok(),  // Binary
         _ => None,                                                // Not a recognized format
-    }
-}
-
-#[derive(Debug)]
-pub enum ParseResult {
-    Imm(i32),
-    Reg(RegData),
-}
-
-fn parse_imm_or_reg(operand: &str) -> ParseResult {
-    match operand.chars().next() {
-        Some('R') => ParseResult::Reg(token_reg(operand)),
-        Some('x' | '#' | 'b') => ParseResult::Imm(parse_imm_operand(operand).unwrap()),
-        _ => panic!("Error: operand parse error"),
     }
 }
 

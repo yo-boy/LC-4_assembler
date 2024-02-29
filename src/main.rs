@@ -5,6 +5,10 @@ mod tokenizer;
 mod writer;
 
 use std::io::Error;
+use std::path::PathBuf;
+
+use clap::arg;
+use clap::command;
 
 use crate::first_pass::first_pass;
 use crate::reader::read_input_file;
@@ -25,11 +29,14 @@ static DOUBLE_INSTRUCTION: &'static [&'static str] = &[
 ];
 
 fn main() -> Result<(), Error> {
-    compile_file("./examples/hello.asm", "./examples/out.bin")?;
+
+    
+    
+    compile_file("./examples/hello.asm".into(), "./examples/out.bin".into())?;
     Ok(())
 }
 
-fn compile_file(input: &str, output: &str) -> Result<(), Error> {
+fn compile_file(input: PathBuf, output: PathBuf) -> Result<(), Error> {
     let instructions = read_input_file(input);
     println!("{:?}", instructions);
     let instructions = first_pass(instructions?);

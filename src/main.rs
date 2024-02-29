@@ -4,8 +4,10 @@ mod second_pass;
 mod tokenizer;
 mod writer;
 
+use std::io::Error;
+
 use crate::first_pass::first_pass;
-use crate::reader::{read_input_file, LabelInstruction};
+use crate::reader::read_input_file;
 use crate::second_pass::second_pass;
 use crate::tokenizer::match_token;
 use crate::writer::write_instructions_to_file;
@@ -22,33 +24,23 @@ static DOUBLE_INSTRUCTION: &'static [&'static str] = &[
     "BRnzp", "BR", "JSR", "LDa", "ST", "STRe",
 ];
 
-fn main() {
-    let file_path = "./examples/hello.asm";
-    let instructions = read_input_file(file_path);
-    println!("{:?}", &instructions);
+fn main() -> Result<(), Error> {
+    compile_file("./examples/hello.asm", "./examples/out.bin")?;
+    Ok(())
+}
 
-    let binary_number = 0b0000100010010011u16;
-
-    let mut write_buffer: Vec<u16> = Vec::new();
-    write_buffer.push(0x3000);
-    write_buffer.push(binary_number);
-    write_buffer.push(0b0000100000000000u16);
-    write_instructions_to_file("./examples/out.bin", write_buffer);
-
-    let _test: Vec<(Option<String>, String)> = Vec::new();
-    let _test: Vec<LabelInstruction> = Vec::new();
-
-    let proccessed_instructions = first_pass(instructions);
-
-    println!("{:?}", proccessed_instructions);
-
-    for instruction in &proccessed_instructions {
+fn compile_file(input: &str, output: &str) -> Result<(), Error> {
+    let instructions = read_input_file(input);
+    println!("{:?}", instructions);
+    let instructions = first_pass(instructions?);
+    println!("{:?}", instructions);
+    for instruction in &instructions {
         println! {"{:?}", match_token(instruction.clone())}
     }
-
-    let encoded_instructions = second_pass(proccessed_instructions);
-    println!("{:x?}", encoded_instructions);
-    print_vec_as_binary(&encoded_instructions);
+    let instructions = second_pass(instructions);
+    print_vec_as_binary(&instructions);
+    write_instructions_to_file(output, instructions)?;
+    Ok(())
 }
 
 fn print_vec_as_binary(vec: &Vec<u16>) {

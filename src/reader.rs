@@ -1,4 +1,5 @@
 use std::fmt;
+use std::io::Error;
 use std::{
     fs::File,
     io::{self, Read},
@@ -85,14 +86,14 @@ fn seperate_label_instruction(instructions: Vec<String>) -> Vec<LabelInstruction
     }
     result
 }
-pub fn read_input_file(file_path: &str) -> Vec<LabelInstruction> {
+pub fn read_input_file(file_path: &str) -> Result<Vec<LabelInstruction>, Error> {
     println!("processing file: ");
-    let myfile = read_file(file_path).unwrap();
+    let myfile = read_file(file_path)?;
     println!("{}", myfile);
     let processed_input = process_input(myfile);
     println!("comments stripped:");
     for s in &processed_input {
         println!("{}", s);
     }
-    seperate_label_instruction(processed_input)
+    Ok(seperate_label_instruction(processed_input))
 }

@@ -15,7 +15,7 @@ pub fn second_pass(instructions: Vec<String>) -> Vec<u16> {
 }
 
 fn encode(result: &mut Vec<u16>, token: Instruction) {
-    let mut value: Vec<u16> = match token {
+    let value: Vec<u16> = match token {
         Instruction::InstructionWithOperands(inst) => match inst.operation {
             Operation::ADD => vec![{
                 // construct the encoded instruction using or statements and bit shifts
@@ -221,28 +221,110 @@ fn encode(result: &mut Vec<u16>, token: Instruction) {
                     _ => todo!(),
                 },
             ],
-            Operation::BR => todo!(),
-            Operation::JUMP => todo!(),
-            Operation::RET => todo!(),
-            Operation::JSR => todo!(),
-            Operation::JSRR => todo!(),
-            Operation::LD => todo!(),
-            Operation::LDa => todo!(),
-            Operation::ST => todo!(),
-            Operation::STR => todo!(),
-            Operation::STR16 => todo!(),
-            Operation::NOT => todo!(),
-            Operation::TRAP => todo!(),
-            Operation::RTI => todo!(),
-            Operation::LSD => todo!(),
-            Operation::LPN => todo!(),
-            Operation::CLRP => todo!(),
-            Operation::HALT => todo!(),
-            Operation::PUTS => todo!(),
-            Operation::GETC => todo!(),
-            Operation::OUT => todo!(),
-            Operation::IN => todo!(),
-            Operation::PUTSP => todo!(),
+            Operation::BR => vec![
+                {
+                    0b0010010000000000u16
+                        | (match inst.op1.unwrap() {
+                            Operand::BRFlag(num) => (num as u16) << 7,
+                            _ => todo!(),
+                        })
+                },
+                match inst.op2.unwrap() {
+                    Operand::Addr(addr) => addr,
+                    _ => todo!(),
+                },
+            ],
+            Operation::JUMP => vec![
+                0b0010100000000000u16
+                    | match inst.op1.unwrap() {
+                        Operand::Reg(num) => (num.reg as u16) << 7,
+                        _ => todo!(),
+                    },
+            ],
+            Operation::RET => vec![0b0010100000000u16],
+            Operation::JSR => vec![
+                0b0011010000000000u16,
+                match inst.op1.unwrap() {
+                    Operand::Addr(addr) => addr,
+                    _ => todo!(),
+                },
+            ],
+            Operation::JSRR => vec![
+                0b0011000000000000u16
+                    | match inst.op1.unwrap() {
+                        Operand::Reg(num) => (num.reg as u16) << 7,
+                        _ => todo!(),
+                    },
+            ],
+            Operation::LD => vec![
+                0b0100000000000000u16
+                    | match inst.op1.unwrap() {
+                        Operand::Reg(num) => (num.reg as u16) << 7,
+                        _ => todo!(),
+                    }
+                    | match inst.op2.unwrap() {
+                        Operand::Imm7(num) => num as u16,
+                        _ => todo!(),
+                    },
+            ],
+            Operation::LDa => vec![
+                0b0100010000000000u16,
+                match inst.op1.unwrap() {
+                    Operand::Addr(addr) => addr,
+                    _ => todo!(),
+                },
+            ],
+            Operation::ST => vec![
+                0b0100110000000000u16
+                    | match inst.op1.unwrap() {
+                        Operand::Reg(num) => (num.reg as u16) << 7,
+                        _ => todo!(),
+                    },
+            ],
+            Operation::STR => vec![
+                0b0011100000000000u16
+                    | match inst.op1.unwrap() {
+                        Operand::Reg(num) => (num.reg as u16) << 7,
+                        _ => todo!(),
+                    }
+                    | match inst.op2.unwrap() {
+                        Operand::Imm7(num) => num as u16,
+                        _ => todo!(),
+                    },
+            ],
+
+            Operation::STR16 => vec![
+                0b0011110000000000u16
+                    | match inst.op1.unwrap() {
+                        Operand::Reg(num) => (num.reg as u16) << 7,
+                        _ => todo!(),
+                    },
+                match inst.op2.unwrap() {
+                    Operand::Imm16(num) => num,
+                    _ => todo!(),
+                },
+            ],
+            Operation::NOT => vec![
+                0b0101000000000000u16
+                    | match inst.op1.unwrap() {
+                        Operand::Reg(num) => (num.reg as u16) << 7,
+                        _ => todo!(),
+                    }
+                    | match inst.op2.unwrap() {
+                        Operand::Reg(num) => (num.reg as u16) << 4,
+                        _ => todo!(),
+                    },
+            ],
+            Operation::TRAP => vec![
+                0b0110000000000000u16
+                    | match inst.op1.unwrap() {
+                        Operand::Trapvect(num) => num as u16,
+                        _ => todo!(),
+                    },
+            ],
+            Operation::RTI => vec![0b0110100000000000u16],
+
+            _ => panic!("error: unexpected token in second pass"),
         },
         Instruction::U16(val) => vec![val],
     };

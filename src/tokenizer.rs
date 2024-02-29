@@ -148,8 +148,8 @@ fn parse_imm_or_reg(operand: &str) -> ParseResult {
 
 fn parse_num_to_imm3(number: i32) -> Operand {
     Operand::Imm3(match number {
-        0..=3 => number as u8,           // Positive values
-        -4..=-1 => (256 + number) as u8, // Negative values
+        0..=3 => number as u8,                     // Positive values
+        -4..=-1 => (256 + number) as u8 & 0b111u8, // Negative values
         _ => panic!(
             "Value {} is outside the representable range of a 3-bit 2's complement number.",
             number
@@ -172,7 +172,7 @@ fn parse_num_to_imm16(number: i32) -> Operand {
 
 fn parse_num_to_imm7(number: i32) -> Operand {
     Operand::Imm7(match number {
-        -64..=-1 => (number + 128) as u8,
+        -64..=-1 => (number + 128) as u8 & 0b1111111u8,
         0 => 0b0000000,
         1..=63 => number as u8,
         _ => panic!(

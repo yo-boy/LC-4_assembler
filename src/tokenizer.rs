@@ -124,9 +124,9 @@ fn token_reg(reg: &str) -> RegData {
 
 fn parse_imm_operand(operand: &str) -> Option<i32> {
     match operand.chars().next() {
-        Some('x') => i32::from_str_radix(&operand[1..], 16).ok(), // Hexadecimal
+        Some('X') => i32::from_str_radix(&operand[1..], 16).ok(), // Hexadecimal
         Some('#') => i32::from_str_radix(&operand[1..], 10).ok(), // Decimal
-        Some('b') => i32::from_str_radix(&operand[1..], 2).ok(),  // Binary
+        Some('B') => i32::from_str_radix(&operand[1..], 2).ok(),  // Binary
         _ => None,                                                // Not a recognized format
     }
 }
@@ -169,7 +169,7 @@ fn parse_num_to_imm7(number: i32) -> Operand {
 
 fn parse_address_or_label(operand: &str) -> Operand {
     match operand.chars().next() {
-        Some('x') => Operand::Addr(u16::from_str_radix(&operand[1..], 16).unwrap()),
+        Some('X') => Operand::Addr(u16::from_str_radix(&operand[1..], 16).unwrap()),
         _ => Operand::Addr(operand.parse::<u16>().unwrap()),
     }
 }
@@ -192,13 +192,13 @@ fn construct_instruction(instruction: Vec<&str>, op: Operation) -> Option<Instru
             InstructionWithOperands {
                 operation: op,
                 op1: Some(Operand::BRFlag(match instruction[0] {
-                    "BRn" => 0b00000100u8,
-                    "BRz" => 0b00000010u8,
-                    "BRp" => 0b00000001u8,
-                    "BRzp" => 0b00000011u8,
-                    "BRnp" => 0b00000101u8,
-                    "BRnz" => 0b00000110u8,
-                    "BRnzp" => 0b00000111u8,
+                    "BRN" => 0b00000100u8,
+                    "BRZ" => 0b00000010u8,
+                    "BRP" => 0b00000001u8,
+                    "BRZP" => 0b00000011u8,
+                    "BRNP" => 0b00000101u8,
+                    "BRNZ" => 0b00000110u8,
+                    "BRNZP" => 0b00000111u8,
                     "BR" => 0b00000111u8,
                     _ => panic!("parse error: malformed BR"),
                 })),
@@ -335,6 +335,7 @@ fn tokenize_reg_imm7(op: Operation, instruction: Vec<&str>) -> Option<Instructio
 }
 
 fn tokenize_16_bit(op: Operation, instruction: Vec<&str>) -> Option<Instruction> {
+    println!("got here");
     Some(Instruction::InstructionWithOperands(
         InstructionWithOperands {
             operation: op,
@@ -394,21 +395,21 @@ fn match_op(op: &str) -> Operation {
         "IN" => Operation::IN,
         "PUTSP" => Operation::PUTSP,
         "ADD" => Operation::ADD,
-        "ADDa" => Operation::ADDa,
-        "ADDe" => Operation::ADDi16,
+        "ADDA" => Operation::ADDa,
+        "ADDE" => Operation::ADDi16,
         "AND" => Operation::AND,
-        "ANDa" => Operation::ANDa,
-        "ANDe" => Operation::ANDi16,
+        "ANDA" => Operation::ANDa,
+        "ANDE" => Operation::ANDi16,
         "XOR" => Operation::XOR,
-        "XORa" => Operation::XORa,
-        "XORe" => Operation::XORi16,
-        "BRn" => Operation::BR,
-        "BRz" => Operation::BR,
-        "BRp" => Operation::BR,
-        "BRzp" => Operation::BR,
-        "BRnp" => Operation::BR,
-        "BRnz" => Operation::BR,
-        "BRnzp" => Operation::BR,
+        "XORA" => Operation::XORa,
+        "XORE" => Operation::XORi16,
+        "BRN" => Operation::BR,
+        "BRZ" => Operation::BR,
+        "BRP" => Operation::BR,
+        "BRZP" => Operation::BR,
+        "BRNP" => Operation::BR,
+        "BRNZ" => Operation::BR,
+        "BRNZP" => Operation::BR,
         "BR" => Operation::BR,
         "JUMP" => Operation::JUMP,
         "RET" => Operation::RET,
@@ -417,11 +418,11 @@ fn match_op(op: &str) -> Operation {
         "NOT" => Operation::NOT,
         "ST" => Operation::ST,
         "STR" => Operation::STR,
-        "STRe" => Operation::STR16,
+        "STRE" => Operation::STR16,
         "TRAP" => Operation::TRAP,
         "RTI" => Operation::RTI,
         "LD" => Operation::LD,
-        "LDa" => Operation::LDa,
-        _ => panic!("invalid instruction"),
+        "LDA" => Operation::LDa,
+        _ => panic!("invalid instruction: {}", op),
     }
 }

@@ -87,10 +87,35 @@ fn seperate_label_instruction(instructions: Vec<String>) -> Vec<LabelInstruction
     }
     result
 }
+
+fn convert_to_uppercase_except_quotes(input: &str) -> String {
+    let mut result = String::with_capacity(input.len());
+    let mut in_quotes = false;
+
+    for c in input.chars() {
+        match c {
+            '"' => {
+                in_quotes = !in_quotes;
+                result.push(c)
+            } // Toggle in_quotes flag
+            _ => {
+                if in_quotes {
+                    result.push(c); // If in quotes, just push character unchanged
+                } else {
+                    result.push_str(&c.to_uppercase().to_string()); // Convert to uppercase
+                }
+            }
+        }
+    }
+
+    result
+}
+
 pub fn read_input_file(file_path: &PathBuf) -> Result<Vec<LabelInstruction>, Error> {
     println!("processing file: ");
     let myfile = read_file(file_path)?;
     println!("{}", myfile);
+    let myfile = convert_to_uppercase_except_quotes(&myfile);
     let processed_input = process_input(myfile);
     println!("comments stripped:");
     for s in &processed_input {

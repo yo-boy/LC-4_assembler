@@ -335,7 +335,6 @@ fn tokenize_reg_imm7(op: Operation, instruction: Vec<&str>) -> Option<Instructio
 }
 
 fn tokenize_16_bit(op: Operation, instruction: Vec<&str>) -> Option<Instruction> {
-    println!("got here");
     Some(Instruction::InstructionWithOperands(
         InstructionWithOperands {
             operation: op,

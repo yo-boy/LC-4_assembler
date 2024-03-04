@@ -14,14 +14,14 @@ use crate::second_pass::second_pass;
 use crate::tokenizer::match_token;
 use crate::writer::write_instructions_to_file;
 
-static POSSIBLE_INSTRUCTIONS: &'static [&'static str] = &[
+static POSSIBLE_INSTRUCTIONS: &[&str] = &[
     "LSD", "LPN", "CLRP", "HALT", "PUTS", "GETC", "OUT", "IN", "PUTSP", ".ORIG", ".FILL", ".BLKW",
     ".STRINGZ", ".END", "ADD", "ADDA", "ADDE", "AND", "ANDA", "ANDE", "XOR", "XORA", "XORE", "BRN",
     "BRZ", "BRP", "BRZP", "BRNP", "BRNZ", "BRNZP", "BR", "JUMP", "RET", "JSR", "JSRR", "NOT", "ST",
     "STR", "STRE", "TRAP", "RTI", "LD", "LDA",
 ];
 
-static DOUBLE_INSTRUCTION: &'static [&'static str] = &[
+static DOUBLE_INSTRUCTION: &[&str] = &[
     "ADDa", "ADDe", "ANDa", "ANDe", "XORa", "XORe", "BRn", "BRz", "BRp", "BRzp", "BRnp", "BRnz",
     "BRnzp", "BR", "JSR", "LDa", "ST", "STRe",
 ];

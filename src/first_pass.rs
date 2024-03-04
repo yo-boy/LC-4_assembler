@@ -59,11 +59,7 @@ pub fn first_pass(instructions: Vec<LabelInstruction>) -> Vec<String> {
 }
 
 fn is_double_length(instruction: &str) -> bool {
-    if DOUBLE_INSTRUCTION.contains(&instruction.split_whitespace().collect::<Vec<&str>>()[0]) {
-        true
-    } else {
-        false
-    }
+    DOUBLE_INSTRUCTION.contains(&instruction.split_whitespace().collect::<Vec<&str>>()[0])
 }
 
 fn first(instructions_list: Vec<LabelInstruction>) -> Vec<LabelInstruction> {
@@ -106,7 +102,7 @@ fn generate_stringz(label: Option<String>, instruction: Vec<&str>) -> Vec<LabelI
         label,
         instruction: ascii_bytes[0].to_string(),
     });
-    for &byte in ascii_bytes.into_iter().skip(1) {
+    for &byte in ascii_bytes.iter().skip(1) {
         result.push(LabelInstruction {
             label: None,
             instruction: byte.to_string(),

@@ -1,3 +1,4 @@
+#![allow(clippy::upper_case_acronyms)]
 use crate::POSSIBLE_INSTRUCTIONS;
 
 pub enum Instruction {

@@ -100,14 +100,13 @@ pub enum Operation {
 // }
 
 pub fn match_token(instruction: String) -> Option<Instruction> {
-    let result: Option<Instruction>;
     let split = instruction.split_whitespace().collect::<Vec<&str>>();
-    if POSSIBLE_INSTRUCTIONS.contains(&split[0]) {
+    let result: Option<Instruction> = if POSSIBLE_INSTRUCTIONS.contains(&split[0]) {
         let op = match_op(split[0]);
-        result = construct_instruction(split, op);
+        construct_instruction(split, op)
     } else {
-        result = Some(Instruction::U16(instruction.parse::<u16>().unwrap()));
-    }
+        Some(Instruction::U16(instruction.parse::<u16>().unwrap()))
+    };
     result
 }
 
@@ -125,7 +124,7 @@ fn token_reg(reg: &str) -> RegData {
 fn parse_imm_operand(operand: &str) -> Option<i32> {
     match operand.chars().next() {
         Some('X') => i32::from_str_radix(&operand[1..], 16).ok(), // Hexadecimal
-        Some('#') => i32::from_str_radix(&operand[1..], 10).ok(), // Decimal
+        Some('#') => str::parse(&operand[1..]).ok(),              // Decimal
         Some('B') => i32::from_str_radix(&operand[1..], 2).ok(),  // Binary
         _ => None,                                                // Not a recognized format
     }

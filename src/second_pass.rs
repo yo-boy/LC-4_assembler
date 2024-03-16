@@ -266,10 +266,14 @@ fn encode(result: &mut Vec<u16>, token: Instruction) {
                     },
             ],
             Operation::LDa => vec![
-                0b0100010000000000u16,
-                match inst.op1.unwrap() {
+                0b01000_1_0000000000u16
+                    | match inst.op1.unwrap() {
+                        Operand::Reg(num) => (num.reg as u16) << 7,
+                        _ => todo!(),
+                    },
+                match inst.op2.unwrap() {
                     Operand::Addr(addr) => addr,
-                    _ => todo!(),
+                    _ => panic!("LDa operand error"),
                 },
             ],
             Operation::ST => vec![

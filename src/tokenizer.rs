@@ -106,7 +106,11 @@ pub fn match_token(instruction: String) -> Option<Instruction> {
         let op = match_op(split[0]);
         construct_instruction(split, op)
     } else {
-        Some(Instruction::U16(instruction.parse::<u16>().unwrap()))
+        Some(Instruction::U16(
+            instruction
+                .parse::<u16>()
+                .expect(&format!("bad instruction: {}", instruction)),
+        ))
     };
     result
 }

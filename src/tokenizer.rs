@@ -328,11 +328,18 @@ fn tokenize_reg_imm7(op: Operation, instruction: Vec<&str>) -> Option<Instructio
         InstructionWithOperands {
             operation: op,
             op1: Some(Operand::Reg(token_reg(instruction[1]))),
-            op2: Some(parse_num_to_imm7(
-                instruction[2][1..]
-                    .parse::<i32>()
-                    .expect("failed to parse number to i32"),
-            )),
+            op2: Some(match &instruction[2][0..1] {
+                "X" => parse_num_to_imm7(
+                    i32::from_str_radix(&instruction[2][1..], 16)
+                        .expect("failed to parse hex to i32"),
+                ),
+                "#" => parse_num_to_imm7(
+                    instruction[2][1..]
+                        .parse::<i32>()
+                        .expect("failed to parse number to i32"),
+                ),
+                _ => panic!("wrong digit format in instruction {:?}", instruction),
+            }),
             op3: None,
         },
     ))

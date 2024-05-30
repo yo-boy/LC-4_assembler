@@ -9,7 +9,7 @@ fn convert_hex_to_num(number: &str) -> u16 {
 }
 //TODO check for off-by-1 error in the calculated label address
 pub fn first_pass(instructions: Vec<LabelInstruction>) -> Vec<String> {
-    let instructions = first(instructions);
+    let instructions = apply_directives(instructions);
     let mut symbol_table: HashMap<String, u32> = HashMap::new();
     let mut pc: u32 = instructions[0].instruction.parse().unwrap();
     pc += 1;
@@ -62,7 +62,7 @@ fn is_double_length(instruction: &str) -> bool {
     DOUBLE_INSTRUCTION.contains(&instruction.split_whitespace().collect::<Vec<&str>>()[0])
 }
 
-fn first(instructions_list: Vec<LabelInstruction>) -> Vec<LabelInstruction> {
+fn apply_directives(instructions_list: Vec<LabelInstruction>) -> Vec<LabelInstruction> {
     let mut result: Vec<LabelInstruction> = Vec::new();
     for LabelInstruction { label, instruction } in instructions_list {
         // here two things should be done, first applying assembler directives

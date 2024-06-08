@@ -174,7 +174,7 @@ fn parse_num_to_imm7(number: i32) -> Operand {
 fn parse_address_or_label(operand: &str) -> Operand {
     match operand.chars().next() {
         Some('X') => Operand::Addr(u16::from_str_radix(&operand[1..], 16).unwrap()),
-        _ => Operand::Addr(operand.parse::<u16>().unwrap()),
+        _ => Operand::Addr(operand.parse::<u16>().unwrap() - 2),
     }
 }
 

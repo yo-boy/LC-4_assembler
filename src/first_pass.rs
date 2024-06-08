@@ -81,7 +81,7 @@ fn apply_directives(instructions_list: Vec<LabelInstruction>) -> Vec<LabelInstru
                 ".BLKW" => result.extend(generate_blkw(label, instruction)),
                 ".STRINGZ" => result.extend(generate_stringz(label, instruction)),
                 ".END" => return result,
-                _ => panic!("bad instruction"),
+                _ => panic!("bad instruction {:?}", instruction),
             }
         } else {
             result.push(LabelInstruction { label, instruction })

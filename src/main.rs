@@ -22,8 +22,8 @@ static POSSIBLE_INSTRUCTIONS: &[&str] = &[
 ];
 
 static DOUBLE_INSTRUCTION: &[&str] = &[
-    "ADDa", "ADDe", "ANDa", "ANDe", "XORa", "XORe", "BRn", "BRz", "BRp", "BRzp", "BRnp", "BRnz",
-    "BRnzp", "BR", "JSR", "LDa", "ST", "STRe",
+    "ADDA", "ADDE", "ANDA", "ANDE", "XORA", "XORE", "BRN", "BRZ", "BRP", "BRZP", "BRNP", "BRNZ",
+    "BRNZP", "BR", "JSR", "LDA", "ST", "STRE",
 ];
 
 fn main() -> Result<(), Error> {

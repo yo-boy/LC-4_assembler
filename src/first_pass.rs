@@ -19,7 +19,7 @@ pub fn first_pass(instructions: Vec<LabelInstruction>) -> Vec<String> {
                 if symbol_table.contains_key(label) {
                     panic!("Error: same label used more than once")
                 } else {
-                    symbol_table.insert(label.to_owned(), pc);
+                    symbol_table.insert(label.to_owned(), pc - 2);
                     if is_double_length(&line.instruction) {
                         pc += 2;
                     } else {

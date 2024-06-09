@@ -114,7 +114,7 @@ fn generate_stringz(label: Option<String>, instruction: Vec<&str>) -> Vec<LabelI
         instruction: ascii_bytes[0].to_string(),
     });
 
-    for &byte in ascii_bytes.iter() {
+    for &byte in ascii_bytes.iter().skip(1) {
         result.push(LabelInstruction {
             label: None,
             instruction: byte.to_string(),

@@ -14,7 +14,7 @@ LOOP	ADD R0, R0, #1		; ADD one to the output variable indexing to the next chara
 	
 	HALT
 
-MESSAGE	.STRINGZ "hello"
+MESSAGE	.STRINGZ "hello world"
 	
 	.END
 

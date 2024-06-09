@@ -239,7 +239,7 @@ fn encode(result: &mut Vec<u16>, token: Instruction) {
                         _ => todo!(),
                     },
             ],
-            Operation::RET => vec![0b0010100000000u16],
+            Operation::RET => vec![0b0010101110000000u16],
             Operation::JSR => vec![
                 0b0011010000000000u16,
                 match inst.op1.unwrap() {

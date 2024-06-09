@@ -93,8 +93,19 @@ fn apply_directives(instructions_list: Vec<LabelInstruction>) -> Vec<LabelInstru
 fn generate_stringz(label: Option<String>, instruction: Vec<&str>) -> Vec<LabelInstruction> {
     let mut result: Vec<LabelInstruction> = Vec::new();
     let ascii_bytes: &[u8];
+    let mut full_string: String;
     if instruction[1].is_ascii() {
-        ascii_bytes = instruction[1][1..instruction[1].len() - 1].as_bytes();
+        full_string = instruction
+            .into_iter()
+            .skip(1)
+            .fold("".to_string(), |acc: String, x: &str| acc + x + " ")
+            .trim_end()
+            .to_string();
+        let mut chars = full_string.chars();
+        chars.next();
+        chars.next_back();
+        full_string = chars.as_str().to_string();
+        ascii_bytes = full_string.as_bytes();
     } else {
         panic!("STRINGZ non ascii input")
     };
@@ -102,7 +113,8 @@ fn generate_stringz(label: Option<String>, instruction: Vec<&str>) -> Vec<LabelI
         label,
         instruction: ascii_bytes[0].to_string(),
     });
-    for &byte in ascii_bytes.iter().skip(1) {
+
+    for &byte in ascii_bytes.iter() {
         result.push(LabelInstruction {
             label: None,
             instruction: byte.to_string(),

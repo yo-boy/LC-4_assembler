@@ -20,10 +20,12 @@ pub fn first_pass(instructions: Vec<LabelInstruction>) -> Vec<String> {
                     panic!("Error: same label used more than once")
                 } else {
                     symbol_table.insert(label.to_owned(), pc - 2);
-                    if is_double_length(&line.instruction) {
-                        pc += 2;
-                    } else {
-                        pc += 1;
+                    if &line.instruction != "" {
+                        if is_double_length(&line.instruction) {
+                            pc += 2;
+                        } else {
+                            pc += 1;
+                        }
                     }
                 }
             }
@@ -129,16 +131,34 @@ fn generate_stringz(label: Option<String>, instruction: Vec<&str>) -> Vec<LabelI
 
 fn generate_blkw(label: Option<String>, instruction: Vec<&str>) -> Vec<LabelInstruction> {
     let mut result: Vec<LabelInstruction> = Vec::new();
-    let number = instruction[1].parse().expect("BLKW invalid argument");
-    result.push(LabelInstruction {
-        label,
-        instruction: "0".to_string(),
-    });
-    for _ in 0..number {
-        result.push(LabelInstruction {
-            label: None,
-            instruction: "0".to_string(),
-        })
-    }
+    let number: i32 = instruction[1].parse().expect("BLKW invalid argument");
+    let number = number - 1;
+    match label {
+        Some(label) => {
+            result.push(LabelInstruction {
+                label: Some(label),
+                instruction: "0".to_string(),
+            });
+            for _ in 0..number {
+                result.push(LabelInstruction {
+                    label: None,
+                    instruction: "0".to_string(),
+                })
+            }
+        }
+        None => {
+            result.push(LabelInstruction {
+                label: Some((number + 1).to_string()),
+                instruction: "0".to_string(),
+            });
+            for _ in 0..number {
+                result.push(LabelInstruction {
+                    label: None,
+                    instruction: "0".to_string(),
+                })
+            }
+        }
+    };
+
     result
 }

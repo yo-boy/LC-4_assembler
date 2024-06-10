@@ -258,7 +258,9 @@ fn construct_instruction(instruction: Vec<&str>, op: Operation) -> Option<Instru
             InstructionWithOperands {
                 operation: op,
                 op1: Some(Operand::Reg(token_reg(instruction[1]))),
-                op2: Some(parse_address_or_label(instruction[2])),
+                op2: Some(parse_num_to_imm16(
+                    parse_imm_operand(instruction[2]).unwrap(),
+                )),
                 op3: None,
             },
         )),

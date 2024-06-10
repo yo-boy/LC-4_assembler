@@ -282,6 +282,11 @@ fn encode(result: &mut Vec<u16>, token: Instruction) {
                         Operand::Reg(num) => (num.reg as u16) << 7,
                         _ => todo!(),
                     },
+                match inst.op2.unwrap() {
+                    Operand::Addr(num) => num as u16,
+                    Operand::Imm16(num) => num as u16,
+                    _ => todo!(),
+                },
             ],
             Operation::STR => vec![
                 0b0011100000000000u16

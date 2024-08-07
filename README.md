@@ -1,6 +1,6 @@
 # Description
 
-This is an assembler for the LC-4 architecture, it was developed in tandem with the simulator for that same architecture, the specification for the architecture is not currently published anywhere, but it will be, and will be linked here when that is done.
+This is an assembler for the LC-4 architecture written entirely in Rust, it was developed in tandem with the simulator for that same architecture, the specification for the architecture is not currently published anywhere, but it will be, and will be linked here when that is done.
 
 # Usage
 
